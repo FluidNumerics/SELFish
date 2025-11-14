@@ -38,7 +38,7 @@ COPY envs/x86/gfx90a/rocm.repo /etc/yum.repos.d/rocm.repo
 
 RUN dnf clean all && \
     dnf update -y && \
-    dnf install -y rocm-hip-libraries rocm-hip-runtime
+    dnf install -y rocm-hip-libraries rocm-hip-runtime hip-devel hsa-rocr-devel rocm-llvm-devel
 
 RUN mkdir $SPACK_ROOT && cd $SPACK_ROOT && \
     git init --quiet && git remote add origin https://github.com/spack/spack.git && git fetch --depth=1 origin v1.0.2 && git checkout --detach FETCH_HEAD && \
@@ -88,6 +88,8 @@ set -o noclobber \
 &&   echo '  - feq-parse@2.2.2' \
 &&   echo '  - mpich@4.2.3 +rocm' \
 &&   echo '  - hdf5@1.14.5 +fortran +mpi' \
+&&   echo '  concretizer:' \
+&&   echo '    unify: true' \
 &&   echo '  packages:' \
 &&   echo '    all:' \
 &&   echo '      providers:' \
@@ -100,6 +102,10 @@ set -o noclobber \
 &&   echo '      buildable: false' \
 &&   echo '      externals:' \
 &&   echo '       - spec: "hip@6.4.1"' \
+&&   echo '         prefix: "/opt/rocm"' \
+&&   echo '       - spec: "hsa-rocr-dev@6.4.1"' \
+&&   echo '         prefix: "/opt/rocm"' \
+&&   echo '       - spec: "llvm-amdgpu@6.4.1"' \
 &&   echo '         prefix: "/opt/rocm"' \
 &&   echo '' \
 &&   echo '  concretizer:' \
@@ -133,7 +139,7 @@ COPY --from=builder /opt/software /opt/software
 COPY envs/x86/gfx90a/rocm.repo /etc/yum.repos.d/rocm.repo
 RUN dnf clean all && \
     dnf update -y && \
-    dnf install -y rocm-hip-libraries rocm-hip-runtime
+    dnf install -y rocm-hip-libraries rocm-hip-runtime hip-devel hsa-rocr-devel rocm-llvm-devel
 
 # paths.view is a symlink, so copy the parent to avoid dereferencing and duplicating it
 COPY --from=builder /opt/views /opt/views
