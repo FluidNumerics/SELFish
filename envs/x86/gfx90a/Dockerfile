@@ -38,7 +38,7 @@ COPY envs/x86/gfx90a/rocm.repo /etc/yum.repos.d/rocm.repo
 
 RUN dnf clean all && \
     dnf update -y && \
-    dnf install rocm-hip-libraries rocm-hip-runtime
+    dnf install -y rocm-hip-libraries rocm-hip-runtime
 
 RUN mkdir $SPACK_ROOT && cd $SPACK_ROOT && \
     git init --quiet && git remote add origin https://github.com/spack/spack.git && git fetch --depth=1 origin v1.0.2 && git checkout --detach FETCH_HEAD && \
@@ -131,7 +131,7 @@ COPY --from=builder /opt/software /opt/software
 COPY envs/x86/gfx90a/rocm.repo /etc/yum.repos.d/rocm.repo
 RUN dnf clean all && \
     dnf update -y && \
-    dnf install rocm-hip-libraries rocm-hip-runtime
+    dnf install -y rocm-hip-libraries rocm-hip-runtime
 
 # paths.view is a symlink, so copy the parent to avoid dereferencing and duplicating it
 COPY --from=builder /opt/views /opt/views
