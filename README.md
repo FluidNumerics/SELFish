@@ -7,6 +7,8 @@ While SELF does support bare-metal builds and those are regularly tested, the co
 
 The core SELF team at Fluid Numerics has adopted enroot+pyxis with Slurm for our deployment model due to positive experience with this approach.
 
+See [Repository Guidelines](AGENTS.md) for contributor expectations, build commands, and review checklists.
+
 
 More docs coming soon
 
