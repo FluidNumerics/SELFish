@@ -1,4 +1,4 @@
-FROM spack/rockylinux9 AS bootstrap
+FROM docker.io/rockylinux:9 AS bootstrap
 
 ENV SPACK_ROOT=/opt/spack \
     CURRENTLY_BUILDING_DOCKER_IMAGE=1 \
