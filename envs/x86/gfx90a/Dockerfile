@@ -90,6 +90,8 @@ set -o noclobber \
 &&   echo '  - hdf5@1.14.5 +fortran +mpi' \
 &&   echo '  packages:' \
 &&   echo '    all:' \
+&&   echo '      providers:' \
+&&   echo '        mpi: [mpich]' \
 &&   echo '      require:' \
 &&   echo '      - target=x86_64_v3' \
 &&   echo '      prefer:' \
@@ -97,8 +99,8 @@ set -o noclobber \
 &&   echo '    hip:' \
 &&   echo '      buildable: false' \
 &&   echo '      externals:' \
-&&   echo '        spec: "hip@6.4.1"' \
-&&   echo '        prefix: /opt/rocm"' \
+&&   echo '       - spec: "hip@6.4.1"' \
+&&   echo '         prefix: "/opt/rocm"' \
 &&   echo '' \
 &&   echo '  concretizer:' \
 &&   echo '    unify: true' \

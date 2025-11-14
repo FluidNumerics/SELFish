@@ -6,10 +6,17 @@ spack:
 
   packages:
     all:
+      providers:
+        mpi: [mpich]
       require: 
         - "target=x86_64_v3"
       prefer: 
         - "amdgpu_target=gfx942"
+      hip:
+        buildable: false
+        externals:
+         - spec: "hip@6.4.1"
+           prefix: "/opt/rocm"
 
   container:
     format: docker
