@@ -34,7 +34,7 @@ RUN dnf update -y \
  && dnf clean all
 
 # Install HIP  #
-COPY envs/x86_64/gfx90a/rocm.repo /etc/yum.repos.d/rocm.repo
+COPY ./envs/x86_64/gfx90a/rocm.repo /etc/yum.repos.d/rocm.repo
 
 RUN dnf clean all && \
     dnf update -y && \
@@ -128,7 +128,7 @@ COPY --from=builder /opt/spack-environment /opt/spack-environment
 COPY --from=builder /opt/software /opt/software
 
 # Install HIP  #
-COPY envs/x86_64/gfx90a/rocm.repo /etc/yum.repos.d/rocm.repo
+COPY ./envs/x86_64/gfx90a/rocm.repo /etc/yum.repos.d/rocm.repo
 RUN dnf clean all && \
     dnf update -y && \
     dnf install rocm-hip-libraries rocm-hip-runtime
