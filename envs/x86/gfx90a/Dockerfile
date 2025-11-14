@@ -33,6 +33,13 @@ RUN dnf update -y \
  && rm -rf /var/cache/dnf \
  && dnf clean all
 
+# Install HIP  #
+COPY envs/x86_64/gfx90a/rocm.repo /etc/yum.repos.d/rocm.repo
+
+RUN dnf clean all && \
+    dnf update -y && \
+    dnf install rocm-hip-libraries rocm-hip-runtime
+
 RUN mkdir $SPACK_ROOT && cd $SPACK_ROOT && \
     git init --quiet && git remote add origin https://github.com/spack/spack.git && git fetch --depth=1 origin v1.0.2 && git checkout --detach FETCH_HEAD && \
     mkdir -p $SPACK_ROOT/opt/spack
@@ -87,6 +94,11 @@ set -o noclobber \
 &&   echo '      - target=x86_64_v3' \
 &&   echo '      prefer:' \
 &&   echo '      - amdgpu_target=gfx942' \
+&&   echo '    hip:' \
+&&   echo '      buildable: false' \
+&&   echo '      externals:' \
+&&   echo '        spec: "hip@6.4.1"' \
+&&   echo '        prefix: /opt/rocm"' \
 &&   echo '' \
 &&   echo '  concretizer:' \
 &&   echo '    unify: true' \
@@ -114,6 +126,12 @@ FROM docker.io/rockylinux:9
 
 COPY --from=builder /opt/spack-environment /opt/spack-environment
 COPY --from=builder /opt/software /opt/software
+
+# Install HIP  #
+COPY envs/x86_64/gfx90a/rocm.repo /etc/yum.repos.d/rocm.repo
+RUN dnf clean all && \
+    dnf update -y && \
+    dnf install rocm-hip-libraries rocm-hip-runtime
 
 # paths.view is a symlink, so copy the parent to avoid dereferencing and duplicating it
 COPY --from=builder /opt/views /opt/views
