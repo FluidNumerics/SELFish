@@ -109,23 +109,23 @@ set -o noclobber \
 &&   echo '    rocm-smi-lib:' \
 &&   echo '      buildable: false' \
 &&   echo '      externals:' \
-&&   echo '        - spec: "rocm-smi-lib@${GPU_BACKEND_VERSION}"' \
-&&   echo '          prefix: "/opt/rocm-${GPU_BACKEND_VERSION}"' \
+&&   echo "        - spec: \"rocm-smi-lib@${GPU_BACKEND_VERSION}\"" \
+&&   echo "          prefix: \"/opt/rocm-${GPU_BACKEND_VERSION}\"" \
 &&   echo '    hip:' \
 &&   echo '      buildable: false' \
 &&   echo '      externals:' \
-&&   echo '        - spec: "hip@${GPU_BACKEND_VERSION}"' \
-&&   echo '          prefix: "/opt/rocm-${GPU_BACKEND_VERSION}"' \
+&&   echo "        - spec: \"hip@${GPU_BACKEND_VERSION}\"" \
+&&   echo "          prefix: \"/opt/rocm-${GPU_BACKEND_VERSION}\"" \
 &&   echo '    hsa-rocr-dev:' \
 &&   echo '      buildable: false' \
 &&   echo '      externals:' \
-&&   echo '        - spec: "hsa-rocr-dev@${GPU_BACKEND_VERSION}"' \
-&&   echo '          prefix: "/opt/rocm-${GPU_BACKEND_VERSION}"' \
+&&   echo "        - spec: \"hsa-rocr-dev@${GPU_BACKEND_VERSION}\"" \
+&&   echo "          prefix: \"/opt/rocm-${GPU_BACKEND_VERSION}\"" \
 &&   echo '    llvm-amdgpu:' \
 &&   echo '      buildable: false' \
 &&   echo '      externals:' \
-&&   echo '        - spec: "llvm-amdgpu@${GPU_BACKEND_VERSION}"' \
-&&   echo '          prefix: "/opt/rocm-${GPU_BACKEND_VERSION}"' \
+&&   echo "        - spec: \"llvm-amdgpu@${GPU_BACKEND_VERSION}\"" \
+&&   echo "          prefix: \"/opt/rocm-${GPU_BACKEND_VERSION}\"" \
 &&   echo '' \
 &&   echo '  concretizer:' \
 &&   echo '    unify: true' \
