@@ -1,0 +1,93 @@
+name: Build ROCm Docker images
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - envs/x86/rocm/**
+      - .github/workflows/build-rocm.yml
+  pull_request:
+    paths:
+      - envs/x86/rocm/**
+      - .github/workflows/build-rocm.yml
+  workflow_dispatch:
+
+env:
+  REGISTRY: docker.io
+  IMAGE_NAME: higherordermethods/selfish
+
+jobs:
+  build:
+    name: Build ${{ matrix.gpu_arch }} image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        gpu_arch: [gfx906, gfx90a, gfx942]
+        gpu_backend_version: ["6.4.3"]
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Generate image metadata
+        id: meta
+        run: |
+          # Convert GPU_BACKEND_VERSION 6.4.3 -> rocm643
+          VERSION_NO_DOTS=$(echo "${{ matrix.gpu_backend_version }}" | tr -d '.')
+          GPU_BACKEND="rocm${VERSION_NO_DOTS}"
+
+          # Build tag components
+          CPU_PLATFORM="x86"
+          GPU_ARCH="${{ matrix.gpu_arch }}"
+
+          # Generate tags following: <version>-<cpu_platform>-<gpu_backend>-<gpu_arch>
+          echo "tags<<EOF" >> $GITHUB_OUTPUT
+          echo "${{ env.IMAGE_NAME }}:latest-${CPU_PLATFORM}-${GPU_BACKEND}-${GPU_ARCH}" >> $GITHUB_OUTPUT
+          echo "${{ env.IMAGE_NAME }}:${{ github.sha }}-${CPU_PLATFORM}-${GPU_BACKEND}-${GPU_ARCH}" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          echo "gpu_backend=${GPU_BACKEND}" >> $GITHUB_OUTPUT
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ matrix.gpu_arch }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-${{ matrix.gpu_arch }}-
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: envs/x86/rocm/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            GPU_ARCH=${{ matrix.gpu_arch }}
+            GPU_BACKEND_VERSION=${{ matrix.gpu_backend_version }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          labels: |
+            com.fluidnumerics.rocm.target=${{ matrix.gpu_arch }}
+            com.fluidnumerics.rocm.version=${{ matrix.gpu_backend_version }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
