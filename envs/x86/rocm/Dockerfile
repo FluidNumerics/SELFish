@@ -162,13 +162,10 @@ FROM docker.io/rockylinux:9
 COPY --from=builder /opt/spack-environment /opt/spack-environment
 COPY --from=builder /opt/software /opt/software
 
-# Install HIP  #
-COPY ./envs/x86/rocm/rocm.repo /etc/yum.repos.d/rocm.repo
-ARG GPU_BACKEND_VERSION=6.4.3
-RUN sed -i "s/@GPU_BACKEND_VERSION@/${GPU_BACKEND_VERSION}/g" /etc/yum.repos.d/rocm.repo && \
-    dnf clean all && \
-    dnf update -y && \
-    dnf --enablerepo epel install -y rocm-hip-libraries rocm-hip-runtime \ 
+RUN dnf update -y \
+ && dnf install -y epel-release \
+ && dnf update -y \
+ && dnf --enablerepo epel install -y \
         bzip2 \
         cmake \
         curl-minimal \
@@ -177,6 +174,14 @@ RUN sed -i "s/@GPU_BACKEND_VERSION@/${GPU_BACKEND_VERSION}/g" /etc/yum.repos.d/r
         gcc-c++ \
         gcc \
         gcc-gfortran
+
+# Install HIP  #
+COPY ./envs/x86/rocm/rocm.repo /etc/yum.repos.d/rocm.repo
+ARG GPU_BACKEND_VERSION=6.4.3
+RUN sed -i "s/@GPU_BACKEND_VERSION@/${GPU_BACKEND_VERSION}/g" /etc/yum.repos.d/rocm.repo \
+ && dnf clean all \
+ && dnf update -y \
+ && dnf install -y rocm-hip-sdk rocm-llvm rocm-smi-lib rocminfo
 
 # paths.view is a symlink, so copy the parent to avoid dereferencing and duplicating it
 COPY --from=builder /opt/views /opt/views
