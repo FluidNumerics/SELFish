@@ -168,7 +168,15 @@ ARG GPU_BACKEND_VERSION=6.4.3
 RUN sed -i "s/@GPU_BACKEND_VERSION@/${GPU_BACKEND_VERSION}/g" /etc/yum.repos.d/rocm.repo && \
     dnf clean all && \
     dnf update -y && \
-    dnf install -y rocm-hip-libraries rocm-hip-runtime
+    dnf --enablerepo epel install -y rocm-hip-libraries rocm-hip-runtime \ 
+        bzip2 \
+        cmake \
+        curl-minimal \
+        file \
+        findutils \
+        gcc-c++ \
+        gcc \
+        gcc-gfortran
 
 # paths.view is a symlink, so copy the parent to avoid dereferencing and duplicating it
 COPY --from=builder /opt/views /opt/views
