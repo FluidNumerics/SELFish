@@ -166,6 +166,9 @@ COPY --from=builder /opt/software /opt/software
 COPY ./envs/x86/rocm/rocm.repo /etc/yum.repos.d/rocm.repo
 ARG GPU_BACKEND_VERSION=6.4.3
 RUN sed -i "s/@GPU_BACKEND_VERSION@/${GPU_BACKEND_VERSION}/g" /etc/yum.repos.d/rocm.repo && \
+ && dnf update -y \
+ && dnf install -y epel-release \
+ && dnf update -y \
     dnf clean all && \
     dnf update -y && \
     dnf --enablerepo epel install -y rocm-hip-libraries rocm-hip-runtime \ 
