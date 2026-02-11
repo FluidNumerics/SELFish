@@ -95,17 +95,13 @@ set -o noclobber \
 &&   echo '  - feq-parse@2.2.2' \
 &&   echo '  - openmpi@5.0.8 +rocm' \
 &&   echo '  - hdf5@1.14.5 +fortran +mpi' \
+&&   echo '  - cmake@3.31.11'\
 &&   echo '  packages:' \
 &&   echo '    all:' \
 &&   echo '      require:' \
 &&   echo '      - target=x86_64_v3' \
 &&   echo '      prefer:' \
 &&   echo "      - amdgpu_target=$GPU_ARCH" \
-&&   echo '    cmake:' \
-&&   echo '      buildable: false' \
-&&   echo '      externals:' \
-&&   echo '        - spec: "cmake@3.26.5"' \
-&&   echo '          prefix: "/usr"' \
 &&   echo '    rocm-smi-lib:' \
 &&   echo '      buildable: false' \
 &&   echo '      externals:' \
