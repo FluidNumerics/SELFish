@@ -1,0 +1,24 @@
+spack:
+  specs:
+  - feq-parse@2.2.2
+  - openmpi@5.0.8 +cuda cuda_arch=70
+  - hdf5@1.14.5 +fortran +mpi
+
+  packages:
+    all:
+      require:
+        - "target=x86_64_v3"
+      prefer:
+        - "cuda_arch=70"
+
+  container:
+    format: docker
+    images:
+      os: rockylinux:9
+      spack:
+        ref: v1.0.2
+
+    strip: true
+
+    labels:
+      mpi: openmpi
