@@ -169,7 +169,8 @@ RUN dnf update -y \
         findutils \
         gcc-c++ \
         gcc \
-        gcc-gfortran
+        gcc-gfortran \
+        lcov
 
 # Install HIP  #
 COPY ./envs/x86/rocm/rocm.repo /etc/yum.repos.d/rocm.repo
