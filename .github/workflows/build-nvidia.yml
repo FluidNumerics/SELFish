@@ -6,10 +6,12 @@ on:
       - main
     paths:
       - envs/x86/sm70/**
+      - envs/x86/sm100/**
       - .github/workflows/build-nvidia.yml
   pull_request:
     paths:
       - envs/x86/sm70/**
+      - envs/x86/sm100/**
       - .github/workflows/build-nvidia.yml
   workflow_dispatch:
 
@@ -26,8 +28,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        gpu_arch: [sm70]
-        cuda_version: ["12.4"]
+        include:
+          - gpu_arch: sm70
+            cuda_version: "12.4"
+          - gpu_arch: sm100
+            cuda_version: "13.0"
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -72,7 +77,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: envs/x86/sm70/Dockerfile
+          file: envs/x86/${{ matrix.gpu_arch }}/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           build-args: |
