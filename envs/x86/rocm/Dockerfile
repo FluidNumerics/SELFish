@@ -185,7 +185,11 @@ COPY --from=builder /opt/views /opt/views
 
 RUN { \
       echo '#!/bin/sh' \
+      && echo '# Save LD_LIBRARY_PATH set by the container runtime (e.g. enroot/pyxis)' \
+      && echo '_pre_spack_ldlp="${LD_LIBRARY_PATH}"' \
       && echo '.' /opt/spack-environment/activate.sh \
+      && echo '# Restore runtime-injected paths (GPU driver libs) after Spack activate' \
+      && echo 'export LD_LIBRARY_PATH="${LD_LIBRARY_PATH:+${LD_LIBRARY_PATH}:}${_pre_spack_ldlp}"' \
       && echo 'exec "$@"'; \
     } > /entrypoint.sh \
 && chmod a+x /entrypoint.sh \

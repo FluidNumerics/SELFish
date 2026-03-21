@@ -10,59 +10,76 @@ The core SELF team at Fluid Numerics has adopted enroot+pyxis with Slurm for our
 See [Repository Guidelines](CLAUDE.md) for contributor expectations, build commands, and review checklists.
 
 
-More docs coming soon
-
-
 ## Organization
 
-The `envs/` subdirectory defines all of the base environments that are aimed at providing base images with all the dependencies required for developing SELF. The subdirectory structure is as `envs/{cpu_platform}/{gpu_backend}`. When `{gpu_platform}=none`, that environment is an environment for working with non-gpu accelerated implementations of SELF.
+The `envs/` subdirectory defines all of the base environments that are aimed at providing base images with all the dependencies required for developing SELF. The subdirectory structure is `envs/{cpu_platform}/{gpu_backend}`.
+
+| Directory | GPU backend | Build args | MPI |
+|-----------|-------------|------------|-----|
+| `envs/x86/rocm/` | AMD ROCm | `GPU_ARCH` (e.g. `gfx90a`), `GPU_BACKEND_VERSION` (e.g. `6.4.3`) | OpenMPI |
+| `envs/x86/cuda/` | NVIDIA CUDA | `CUDA_ARCH` (e.g. `70`, `100`), `CUDA_VERSION` (e.g. `12.4`, `13.0`) | OpenMPI |
+| `envs/x86/none/` | None (CPU-only) | — | OpenMPI |
+
+Each directory contains a `spack.yaml` manifest, a `Dockerfile`, and a `feq-parse.patch`.
 
 ## Container Images
 
-SELFish provides pre-built container images with all dependencies for GPU-accelerated spectral element computations. Images are tagged using a **version-architecture** naming scheme to support multiple GPU targets.
+SELFish provides pre-built container images with all dependencies for spectral element computations. Images are published to Docker Hub under `higherordermethods/selfish`.
 
 ### Image Tagging Scheme
 
 Images follow the pattern: `higherordermethods/selfish:<version>-<cpu_platform>-<gpu_backend>-<gpu_arch>`
 
-- **`<version>`**: Semantic version (e.g., `v1.2.3`) or release channel (`latest`, `dev`)
-- **`<cpu_platform>`** : Target cpu architecture (e.g. `x86`, `arm` )
-- **`<gpu_backend>`** : GPU backend provider with version (e.g. `rocm643`, `cuda112`)
-- **`<gpu_arch>`**: Target GPU architecture (e.g., `gfx90a`, `gfx906`, `gfx942`)
+- **`<version>`**: `latest` or a commit SHA
+- **`<cpu_platform>`**: Target CPU architecture (e.g. `x86`)
+- **`<gpu_backend>`**: GPU backend with version (e.g. `rocm643`, `cuda124`) or `none` for CPU-only
+- **`<gpu_arch>`**: Target GPU architecture (e.g. `gfx90a`, `sm70`); omitted for CPU-only images
 
-#### Examples:
+#### Examples
 ```bash
-# Stable release for MI210/MI250 (gfx90a)
-docker pull higherordermethods/selfish:v1.2.3-gfx90a
+# AMD MI210/MI250 (gfx90a) with ROCm 6.4.3
+docker pull higherordermethods/selfish:latest-x86-rocm643-gfx90a
 
-# Latest stable for Radeon Instinct MI100 (gfx908)
-docker pull higherordermethods/selfish:latest-gfx908
+# NVIDIA V100 (sm70) with CUDA 12.4
+docker pull higherordermethods/selfish:latest-x86-cuda124-sm70
 
-# Development build for MI300A (gfx942)
-docker pull higherordermethods/selfish:dev-gfx942
+# NVIDIA Blackwell (sm100) with CUDA 13.0
+docker pull higherordermethods/selfish:latest-x86-cuda130-sm100
+
+# CPU-only
+docker pull higherordermethods/selfish:latest-x86-none
 ```
 
-### Supported GPU Architectures
+### Supported Architectures
 
-| Architecture | GPU Models | Tag Suffix |
-|--------------|------------|------------|
-| gfx90a | MI210, MI250, MI250X | `-gfx90a` |
-| gfx908 | MI100 | `-gfx908` |
-| gfx906 | MI50, MI60, Radeon VII | `-gfx906` |
-| gfx942 | MI300A, MI300X | `-gfx942` |
-| sm_72  | V100 | -sm72 |
+#### AMD ROCm
+| Architecture | GPU Models | Tag |
+|--------------|------------|-----|
+| gfx906 | MI50, MI60, Radeon VII | `latest-x86-rocm643-gfx906` |
+| gfx90a | MI210, MI250, MI250X | `latest-x86-rocm643-gfx90a` |
+| gfx942 | MI300A, MI300X | `latest-x86-rocm643-gfx942` |
+
+#### NVIDIA CUDA
+| Architecture | GPU Models | Tag |
+|--------------|------------|-----|
+| sm70 | V100 | `latest-x86-cuda124-sm70` |
+| sm100 | B200, B300 | `latest-x86-cuda130-sm100` |
+
+#### CPU-only
+| Tag |
+|-----|
+| `latest-x86-none` |
 
 ### Determining Your GPU Architecture
 
-If you're unsure which image to use, check your GPU architecture.
-
-For AMD GPUs,
+For AMD GPUs:
 ```bash
-# Using rocminfo
 rocminfo | grep "Name:" | grep "gfx"
+```
 
-# Using rocm-smi
-rocm-smi --showproductname
+For NVIDIA GPUs:
+```bash
+nvidia-smi --query-gpu=compute_cap --format=csv,noheader
 ```
 
 ### Using with Slurm
@@ -71,25 +88,20 @@ Specify the architecture-specific image in your job script:
 ```bash
 #!/bin/bash
 #SBATCH --gpus=1
-#SBATCH --container-image=higherordermethods/selfish:v1.2.3-gfx90a
+#SBATCH --container-image=higherordermethods/selfish:latest-x86-rocm643-gfx90a
 
 ./run_simulation.sh
 ```
-
-### Version Pinning Recommendations
-
-- **Production**: Pin to specific versions (e.g., `v1.2.3-gfx90a`) for reproducibility
-- **Development**: Use `latest-<arch>` for convenience (auto-updates with new releases)
-- **Testing CI**: Use `dev-<arch>` to test against bleeding-edge builds
 
 ### Image Metadata
 
 All images include OCI labels for programmatic inspection:
 ```bash
-docker inspect higherordermethods/selfish:v1.2.3-gfx90a | grep -A5 Labels
+docker inspect higherordermethods/selfish:latest-x86-cuda124-sm70 | grep -A5 Labels
 ```
 
 Key labels:
-- `com.fluidnumerics.rocm.target`: GPU architecture target
-- `com.fluidnumerics.selfish.version`: SELFish version
-- `org.opencontainers.image.version`: Container image version
+- `com.fluidnumerics.rocm.target` / `com.fluidnumerics.cuda.target`: GPU architecture target
+- `com.fluidnumerics.rocm.version` / `com.fluidnumerics.cuda.version`: Backend version
+- `org.opencontainers.image.source`: Source repository
+- `org.opencontainers.image.revision`: Git commit SHA
