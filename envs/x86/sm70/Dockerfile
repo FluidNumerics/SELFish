@@ -155,15 +155,14 @@ RUN dnf update -y \
         gcc-gfortran \
         lcov
 
-# Install CUDA runtime libraries
+# Install CUDA toolkit (nvcc + libraries) so downstream projects can compile against CUDA
 ARG CUDA_VERSION=12.4
 RUN dnf config-manager \
         --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo \
  && dnf clean all \
  && dnf update -y \
  && dnf install -y \
-        cuda-libraries-$(echo ${CUDA_VERSION} | tr '.' '-') \
-        cuda-nvtx-$(echo ${CUDA_VERSION} | tr '.' '-')
+        cuda-toolkit-$(echo ${CUDA_VERSION} | tr '.' '-')
 
 # paths.view is a symlink, so copy the parent to avoid dereferencing and duplicating it
 COPY --from=builder /opt/views /opt/views
