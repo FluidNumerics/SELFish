@@ -1,6 +1,6 @@
 FROM docker.io/rockylinux:9 AS bootstrap
 
-ARG CUDA_VERSION=13.0
+ARG CUDA_VERSION=12.4
 
 ENV SPACK_ROOT=/opt/spack \
     CURRENTLY_BUILDING_DOCKER_IMAGE=1 \
@@ -83,6 +83,8 @@ CMD ["interactive-shell"]
 # Build stage with Spack pre-installed and ready to be used
 FROM bootstrap AS builder
 
+ARG CUDA_VERSION=12.4
+ARG CUDA_ARCH=70
 
 # What we want to install and how we want to install it
 # is specified in a manifest file (spack.yaml)
@@ -91,7 +93,7 @@ set -o noclobber \
 &&  (echo spack: \
 &&   echo '  specs:' \
 &&   echo '  - feq-parse@2.2.2' \
-&&   echo '  - openmpi@5.0.8 +cuda cuda_arch=100' \
+&&   echo "  - openmpi@5.0.8 +cuda cuda_arch=${CUDA_ARCH}" \
 &&   echo '  - hdf5@1.14.5 +fortran +mpi' \
 &&   echo '  - cmake@3.31.11'\
 &&   echo '  packages:' \
@@ -99,7 +101,7 @@ set -o noclobber \
 &&   echo '      require:' \
 &&   echo '      - target=x86_64_v3' \
 &&   echo '      prefer:' \
-&&   echo '      - cuda_arch=100' \
+&&   echo "      - cuda_arch=${CUDA_ARCH}" \
 &&   echo '    cuda:' \
 &&   echo '      buildable: false' \
 &&   echo '      externals:' \
@@ -114,7 +116,7 @@ set -o noclobber \
 &&   echo '  view: /opt/views/view') > /opt/spack-environment/spack.yaml
 
 # Apply feq-parse patch to add "c" build dependency
-COPY ./envs/x86/sm100/feq-parse.patch /tmp/feq-parse.patch
+COPY ./envs/x86/cuda/feq-parse.patch /tmp/feq-parse.patch
 #
 RUN SPACK_PKGS_ROOT=$(spack repo list | awk '{print $NF}') &&\
     SPACK_BUILTIN_PKGS_ROOT=${SPACK_PKGS_ROOT/repos\/spack_repo\/builtin} &&\
@@ -156,7 +158,7 @@ RUN dnf update -y \
         lcov
 
 # Install CUDA toolkit (nvcc + libraries) so downstream projects can compile against CUDA
-ARG CUDA_VERSION=13.0
+ARG CUDA_VERSION=12.4
 RUN dnf config-manager \
         --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo \
  && dnf clean all \

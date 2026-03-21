@@ -1,7 +1,5 @@
 FROM docker.io/rockylinux:9 AS bootstrap
 
-ARG CUDA_VERSION=12.4
-
 ENV SPACK_ROOT=/opt/spack \
     CURRENTLY_BUILDING_DOCKER_IMAGE=1 \
     container=docker
@@ -35,15 +33,6 @@ RUN dnf update -y \
  && pip3 install boto3 \
  && rm -rf /var/cache/dnf \
  && dnf clean all
-
-# Install CUDA toolkit from NVIDIA repo
-RUN dnf config-manager \
-        --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo \
- && dnf clean all \
- && dnf update -y \
- && dnf install -y cuda-toolkit-$(echo ${CUDA_VERSION} | tr '.' '-')
-
-RUN ls -l /usr/local/cuda-${CUDA_VERSION}/include/cuda.h
 
 RUN mkdir $SPACK_ROOT && cd $SPACK_ROOT && \
     git init --quiet && git remote add origin https://github.com/spack/spack.git && git fetch --depth=1 origin develop && git checkout --detach FETCH_HEAD && \
@@ -91,20 +80,13 @@ set -o noclobber \
 &&  (echo spack: \
 &&   echo '  specs:' \
 &&   echo '  - feq-parse@2.2.2' \
-&&   echo '  - openmpi@5.0.8 +cuda cuda_arch=70' \
+&&   echo '  - openmpi@5.0.8' \
 &&   echo '  - hdf5@1.14.5 +fortran +mpi' \
 &&   echo '  - cmake@3.31.11'\
 &&   echo '  packages:' \
 &&   echo '    all:' \
 &&   echo '      require:' \
 &&   echo '      - target=x86_64_v3' \
-&&   echo '      prefer:' \
-&&   echo '      - cuda_arch=70' \
-&&   echo '    cuda:' \
-&&   echo '      buildable: false' \
-&&   echo '      externals:' \
-&&   echo "        - spec: \"cuda@${CUDA_VERSION}\"" \
-&&   echo "          prefix: \"/usr/local/cuda-${CUDA_VERSION}\"" \
 &&   echo '' \
 &&   echo '  concretizer:' \
 &&   echo '    unify: true' \
@@ -114,7 +96,7 @@ set -o noclobber \
 &&   echo '  view: /opt/views/view') > /opt/spack-environment/spack.yaml
 
 # Apply feq-parse patch to add "c" build dependency
-COPY ./envs/x86/sm70/feq-parse.patch /tmp/feq-parse.patch
+COPY ./envs/x86/none/feq-parse.patch /tmp/feq-parse.patch
 #
 RUN SPACK_PKGS_ROOT=$(spack repo list | awk '{print $NF}') &&\
     SPACK_BUILTIN_PKGS_ROOT=${SPACK_PKGS_ROOT/repos\/spack_repo\/builtin} &&\
@@ -154,15 +136,6 @@ RUN dnf update -y \
         gcc \
         gcc-gfortran \
         lcov
-
-# Install CUDA toolkit (nvcc + libraries) so downstream projects can compile against CUDA
-ARG CUDA_VERSION=12.4
-RUN dnf config-manager \
-        --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel9/x86_64/cuda-rhel9.repo \
- && dnf clean all \
- && dnf update -y \
- && dnf install -y \
-        cuda-toolkit-$(echo ${CUDA_VERSION} | tr '.' '-')
 
 # paths.view is a symlink, so copy the parent to avoid dereferencing and duplicating it
 COPY --from=builder /opt/views /opt/views
