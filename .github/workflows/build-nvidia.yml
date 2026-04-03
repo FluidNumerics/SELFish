@@ -30,9 +30,15 @@ jobs:
           - gpu_arch: sm70
             cuda_arch: "70"
             cuda_version: "12.4"
+          - gpu_arch: sm89
+            cuda_arch: "89"
+            cuda_version: "12.4"
           - gpu_arch: sm100
             cuda_arch: "100"
             cuda_version: "13.0"
+          - gpu_arch: sm110
+            cuda_arch: "110"
+            cuda_version: "13.2"
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
