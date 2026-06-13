@@ -36,6 +36,9 @@ jobs:
           - gpu_arch: sm100
             cuda_arch: "100"
             cuda_version: "13.0"
+          - gpu_arch: sm103
+            cuda_arch: "103"
+            cuda_version: "13.0"
           - gpu_arch: sm110
             cuda_arch: "110"
             cuda_version: "13.2"
